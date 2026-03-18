@@ -29,9 +29,9 @@ file = st.sidebar.file_uploader("Upload CSV", type=["csv"])
 if file:
     data = pd.read_csv(file)
 else:
-    st.warning("⚠️ Please upload a student dataset to begin analysis.")
-    st.info("Upload a CSV file with columns: Student_ID, Name, Marks, Attendance, Engagement")
+    st.warning("⚠️ Please upload a student dataset to begin.")
     st.stop()
+
 # -----------------------------
 # RISK LOGIC
 # -----------------------------
@@ -85,19 +85,23 @@ with tab1:
     col1,col2 = st.columns(2)
 
     with col1:
-        st.plotly_chart(px.pie(data,names="Risk Level"),use_container_width=True)
+        st.plotly_chart(px.pie(data,names="Risk Level"), width='stretch')
 
     with col2:
-        st.plotly_chart(px.scatter(data,x="Attendance",y="Marks",color="Risk Level"),
-                        use_container_width=True)
+        st.plotly_chart(
+            px.scatter(data,x="Attendance",y="Marks",color="Risk Level"),
+            width='stretch'
+        )
 
     # Feature importance
     st.subheader("🧠 Feature Importance")
     imp = model.feature_importances_
-    st.plotly_chart(px.bar(x=["Marks","Attendance","Engagement"],y=imp),
-                    use_container_width=True)
+    st.plotly_chart(
+        px.bar(x=["Marks","Attendance","Engagement"],y=imp),
+        width='stretch'
+    )
 
-    # Risk ranking (NEW)
+    # Risk ranking
     st.subheader("🏆 Top Risk Ranking")
     ranked = data.sort_values(by="Risk Score", ascending=False)
     st.dataframe(ranked[["Name","Risk Score","Risk Level"]].head(10))
@@ -150,14 +154,16 @@ with tab3:
     elif m<40 or a<60 or e<4:
         risk="High"
     else:
-        pred=model.predict([[m,a,e]])[0]
+        input_df = pd.DataFrame([[m,a,e]],
+                                columns=["Marks","Attendance","Engagement"])
+        pred=model.predict(input_df)[0]
         risk=le.inverse_transform([pred])[0]
 
     if risk=="High": st.error("🔴 High Risk")
     elif risk=="Medium": st.warning("🟡 Medium Risk")
     else: st.success("🟢 Low Risk")
 
-    # Main risk factor (NEW)
+    # Main risk factor
     st.subheader("🔎 Main Risk Factor")
     if m<50: st.write("Academic Performance")
     elif a<75: st.write("Attendance")
@@ -176,14 +182,17 @@ with tab3:
 
     # Parent message
     if st.button("📩 Send Parent Alert"):
-        time.sleep(1)
+        with st.spinner("Sending notification..."):
+            time.sleep(2)
+
         if risk=="High":
-            msg=f"Your child {selected['Name']} is HIGH risk. Immediate action required."
+            msg=f"Dear Parent,\nYour child {selected['Name']} is HIGH risk.\nImmediate action required."
         elif risk=="Medium":
-            msg=f"{selected['Name']} shows moderate risk. Please monitor."
+            msg=f"Dear Parent,\n{selected['Name']} shows moderate risk.\nPlease monitor progress."
         else:
-            msg=f"{selected['Name']} is performing well. Keep supporting!"
-        st.success("Sent!")
+            msg=f"Dear Parent,\n{selected['Name']} is performing well.\nKeep up the good work!"
+
+        st.success("✅ Notification sent")
         st.text_area("Message",msg)
 
 # -----------------------------
@@ -201,11 +210,13 @@ with tab4:
     elif m<40 or a<60 or e<4:
         sim="High"
     else:
-        sim=le.inverse_transform([model.predict([[m,a,e]])[0]])[0]
+        input_df = pd.DataFrame([[m,a,e]],
+                                columns=["Marks","Attendance","Engagement"])
+        sim=le.inverse_transform([model.predict(input_df)[0]])[0]
 
     st.success(f"Predicted Risk: {sim}")
 
-    # Intervention simulator (NEW)
+    # Intervention simulator
     st.subheader("📉 Intervention Effect")
 
     m2 = st.slider("Improved Marks",0,100,70)
@@ -217,11 +228,13 @@ with tab4:
     elif m2<40 or a2<60 or e2<4:
         improved="High"
     else:
-        improved=le.inverse_transform([model.predict([[m2,a2,e2]])[0]])[0]
+        input_df2 = pd.DataFrame([[m2,a2,e2]],
+                                 columns=["Marks","Attendance","Engagement"])
+        improved=le.inverse_transform([model.predict(input_df2)[0]])[0]
 
     st.success(f"After Intervention: {improved}")
 
-    # Future scope (ONLY HERE)
+    # Future scope ONLY HERE
     st.subheader("🚀 Future Scope")
     st.write("""
     - Real-time database integration  
