@@ -72,17 +72,6 @@ The system analyzes student data such as **marks, attendance, and engagement** t
 
 ---
 
-## 🎯 How to Run Locally
-
-```bash
-git clone https://github.com/your-username/student-retention-ai.git
-cd student-retention-ai
-pip install -r requirements.txt
-streamlit run app.py
-```
-
----
-
 ## ☁️ Deployment
 
 The application is deployed using **Streamlit Cloud** and can be accessed via a live web link.
